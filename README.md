@@ -1,33 +1,31 @@
-```markdown
 # YTMusic-Save-To-Library
 
-**YTMusic-Save-To-Library** is a lightweight JavaScript tool that batch-saves unsaved tracks from your YouTube Music playlists into your library. The script scrolls through your playlist, reveals hidden menu options, and automatically clicks the “Save to library” option for each song.
+**YTMusic-Save-To-Library** is a lightweight JavaScript tool that batch-saves unsaved tracks from your YouTube Music playlists into your library. The script scrolls through your playlist, reveals hidden menu options, and automatically clicks the "Save to library" option for each song.
 
 ## Features
 
 - **Batch Save:** Automatically add unsaved songs to your library.
 - **Automatic Scrolling:** Loads the full playlist by scrolling.
-- **Menu Interaction:** Simulates clicks to reveal and use YouTube Music’s menu controls.
-- **Easy Usage:** Run the script in your browser’s Developer Console—no installation needed.
+- **Menu Interaction:** Simulates clicks to reveal and use YouTube Music's menu controls.
+- **Easy Usage:** Run the script in your browser's Developer Console—no installation needed.
 
 ## How It Works
 
 1. **Scroll:** The script scrolls to the bottom of the page until all songs are loaded.
-2. **Menu Trigger:** It queries for each song’s menu trigger element using the class  
-   `.dropdown-trigger.style-scope.ytmusic-menu-renderer`
-3. **Dropdown & Save:** For each song, the script clicks the trigger, waits for the dropdown to appear, and then looks for a menu item labeled exactly “Save to library” (or “Add to library”). If found, it clicks it.
+2. **Menu Trigger:** It queries for each song's menu trigger element using the class `.dropdown-trigger.style-scope.ytmusic-menu-renderer`
+3. **Dropdown & Save:** For each song, the script clicks the trigger, waits for the dropdown to appear, and then looks for a menu item labeled exactly "Save to library" (or "Add to library"). If found, it clicks it.
 4. **Cleanup:** It closes the dropdown and moves on to the next song.
 
 ## Instructions
 
-1. Open your YouTube Music playlist (or "Liked Music") page. (It’s a good idea to scroll to the bottom manually first.)
-2. Open your browser’s Developer Console (F12, Ctrl+Shift+J, or Cmd+Option+J).
+1. Open your YouTube Music playlist (or "Liked Music") page. (It's a good idea to scroll to the bottom manually first.)
+2. Open your browser's Developer Console (F12, Ctrl+Shift+J, or Cmd+Option+J).
 3. Paste the entire script (provided below) into the console and press Enter.
 4. Watch the console logs for progress. The script will process each song and update your library accordingly.
 
 ## Usage
 
-```js
+```javascript
 (async function () {
   // ─── Helper: Scroll to the bottom so that all songs load ─────────────────────────────
   async function scrollToBottom(delay = 1000) {
@@ -122,4 +120,3 @@ Contributions, issues, or suggestions are welcome. Please open an issue or submi
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-```
