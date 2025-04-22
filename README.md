@@ -28,7 +28,7 @@
 ```javascript
 (async function () {
   // ─── Helper: Scroll to the bottom so that all songs load ─────────────────────────────
-  async function scrollToBottom(delay = 1000) {
+  async function scrollToBottom(delay = 1500) {
     console.log("Scrolling to load all songs...");
     let lastHeight = document.body.scrollHeight;
     while (true) {
@@ -44,13 +44,13 @@
   // ─── Helper: Wait for the dropdown menu to appear ─────────────────────────────
   async function waitForDropdown(timeout = 5000) {
     return new Promise((resolve, reject) => {
-      const start = Date.now();
+      const startTime = Date.now();
       const interval = setInterval(() => {
         const dropdown = document.querySelector("ytmusic-menu-popup-renderer[slot='dropdown-content']");
         if (dropdown) {
           clearInterval(interval);
           resolve(dropdown);
-        } else if (Date.now() - start > timeout) {
+        } else if (Date.now() - startTime > timeout) {
           clearInterval(interval);
           reject(new Error("Timeout waiting for dropdown."));
         }
@@ -58,59 +58,83 @@
     });
   }
 
-  // ─── Main Flow ─────────────────────────────────────────────────────────────
-  // First, scroll to ensure every song is loaded.
+  // ─── Main Flow ───────────────────────────────────────────────────────
+  // First, scroll down so all songs are loaded
   await scrollToBottom();
 
-  // Query all menu triggers for the songs.
-  const triggers = document.querySelectorAll(".dropdown-trigger.style-scope.ytmusic-menu-renderer");
-  console.log(`Found ${triggers.length} menu trigger element(s).`);
+  // Get all song containers
+  const songs = document.querySelectorAll("ytmusic-responsive-list-item-renderer");
+  console.log(`Found ${songs.length} songs in the playlist.`);
 
-  // Process each song one by one.
-  for (let i = 0; i < triggers.length; i++) {
-    try {
-      // Click the menu trigger to open the dropdown.
-      const trigger = triggers[i];
-      trigger.click();
-      console.log(`Clicked trigger for song ${i + 1}.`);
-      
-      // Wait a brief moment so the dropdown has time to open.
-      await new Promise((r) => setTimeout(r, 300));
-      
-      // Wait for the dropdown element to appear.
-      const dropdown = await waitForDropdown(5000);
-      await new Promise((r) => setTimeout(r, 200)); // Allow dropdown items to render
-      
-      // Attempt to find the "Save to library" option.
-      const itemsContainer = dropdown.querySelector("tp-yt-paper-listbox#items");
-      let addSong = itemsContainer
-        ? itemsContainer.querySelector("ytmusic-toggle-menu-service-item-renderer.style-scope.ytmusic-menu-popup-renderer")
-        : null;
-      
-      if (addSong) {
-        // Find the text element that has the label.
-        const actualAddSong = addSong.querySelector("yt-formatted-string.text.style-scope.ytmusic-toggle-menu-service-item-renderer");
-        if (actualAddSong && actualAddSong.innerText.trim() === "Save to library") {
-          // Click the menu item to save the song.
-          addSong.click();
-          console.log(`Song ${i + 1}: Saved to library.`);
-          await new Promise((r) => setTimeout(r, 300));
-        } else {
-          console.log(`Song ${i + 1}: "Save to library" option not found (possibly already saved).`);
-        }
-      } else {
-        console.log(`Song ${i + 1}: Could not find the add song menu item.`);
-      }
-      
-      // Close the dropdown by clicking outside.
-      document.body.click();
-      await new Promise((r) => setTimeout(r, 200));
-    } catch (err) {
-      console.error(`Error processing song ${i + 1}: ${err}`);
+  // Process each song one by one
+  for (let i = 0; i < songs.length; i++) {
+    const songContainer = songs[i];
+    console.log(`Processing song ${i + 1} of ${songs.length}…`);
+
+    // Simulate a mouseover on the song container so that the hidden menu becomes active
+    songContainer.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 300));
+
+    // Try to locate the menu placeholder within the song
+    // In the current DOM, the menu is rendered in a <ytmusic-menu-renderer> element.
+    let menuRenderer = songContainer.querySelector("ytmusic-menu-renderer");
+    if (!menuRenderer) {
+      console.log(`Song ${i + 1}: Menu renderer not found; skipping.`);
+      continue;
     }
+
+    // Look inside the placeholder for a button whose aria-label contains "menu"
+    let menuButton = menuRenderer.querySelector("button[aria-label*='menu']");
+    if (!menuButton) {
+      console.log(`Song ${i + 1}: Menu button not found; skipping.`);
+      continue;
+    }
+
+    // Click the menu button to bring up the dropdown options.
+    menuButton.click();
+    console.log(`Song ${i + 1}: Menu button clicked.`);
+    
+    // Wait for the dropdown menu to appear.
+    let dropdown;
+    try {
+      dropdown = await waitForDropdown(5000);
+    } catch (e) {
+      console.log(`Song ${i + 1}: Dropdown did not appear; skipping.`);
+      continue;
+    }
+    
+    // Give a short delay to allow dropdown items to render.
+    await new Promise((r) => setTimeout(r, 300));
+
+    // Within the dropdown, search for the "Save to library" or "Add to library" option.
+    const menuItems = dropdown.querySelectorAll("ytmusic-toggle-menu-service-item-renderer");
+    let saveOption = null;
+    for (let item of menuItems) {
+      let textElem = item.querySelector("yt-formatted-string");
+      if (textElem) {
+        const text = textElem.innerText.trim();
+        if (text === "Save to library" || text === "Add to library") {
+          saveOption = item;
+          break;
+        }
+      }
+    }
+    if (saveOption) {
+      saveOption.click();
+      console.log(`Song ${i + 1}: Song saved to library.`);
+      await new Promise((r) => setTimeout(r, 500));
+    } else {
+      console.log(`Song ${i + 1}: "Save to library" option not found. Possibly already saved.`);
+    }
+
+    // Close the dropdown by clicking outside.
+    document.body.click();
+    await new Promise((r) => setTimeout(r, 300));
   }
+
   console.log("Batch Save process complete!");
 })();
+
 ```
 
 ## Contributing
